@@ -2,7 +2,7 @@ module microgradv
 
 import math
 
-pub struct Value {
+struct Value {
 mut:
 	val_backward fn () = fn () {
 		return
