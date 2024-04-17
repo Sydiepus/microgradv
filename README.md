@@ -17,7 +17,7 @@ v install Sydiepus.microgradv
 ## Example Usage
 
 ```v
-import microgradv
+import sydiepus.microgradv
 
 a := microgradv.value(20)
 b := microgradv.value(58)
