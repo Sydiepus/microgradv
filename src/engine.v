@@ -2,17 +2,23 @@ module microgradv
 
 import math
 
+// Value is a wrapper for f64 type.
 pub struct Value {
 mut:
+	// The function for backpropagation.
+	// It is assigned when the Value was the result of an operation.
 	val_backward fn () = fn () {
 		return
 	}
 pub:
+	// for debugging, the operation that resulted to this Value.
 	op string // default empty
 pub mut:
-	data    f64      @[required]
+	data f64 @[required]
+	// The Values that created this value, if any.
 	parents []&Value // default empty
-	grad    f64 = 0.0 // default 0.0
+	// The gradient with respect to the Value that .backward() was called on.
+	grad f64 = 0.0 // default 0.0
 }
 
 pub fn (a &Value) add(b &Value) &Value {
