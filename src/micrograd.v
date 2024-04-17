@@ -2,15 +2,15 @@ module microgradv
 
 import math
 
-struct Value {
+pub struct Value {
 mut:
 	val_backward fn () = fn () {
 		return
 	}
 pub:
-	data f64    @[required]
-	op   string // default empty
+	op string // default empty
 pub mut:
+	data    f64      @[required]
 	parents []&Value // default empty
 	grad    f64 = 0.0 // default 0.0
 }
