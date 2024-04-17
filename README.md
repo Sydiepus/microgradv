@@ -10,7 +10,9 @@ An implementation of Andrej karpathy's [micrograd](https://github.com/karpathy/m
 
 ## Installation
 
-```v install sydiepus.microgradv```
+```
+v install Sydiepus.microgradv
+```
 
 ## Example Usage
 
