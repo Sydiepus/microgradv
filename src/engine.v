@@ -107,6 +107,18 @@ pub fn (a &Value) relu() &Value {
 	return out
 }
 
+pub fn (a &Value) tanh() &Value {
+	mut out := &Value{
+		data: math.tanh(a.data)
+		parents: [a]
+		op: 'tanh'
+	}
+	out.val_backward = fn [mut out, a] () {
+		out.parents[0].grad += (1 - math.pow(math.tanh(a.data), 2)) * out.grad
+	}
+	return out
+}
+
 pub fn (mut a Value) backward() {
 	// build topological order
 	// parents will become children.
