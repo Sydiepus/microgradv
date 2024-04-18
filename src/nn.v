@@ -30,7 +30,7 @@ pub fn (n &Neuron) forward(x []&Value) !&Value {
 	for i in 0 .. x.len {
 		out = out.add(n.weights[i].mul(x[i]))
 	}
-	return out
+	return out.tanh()
 }
 
 pub fn (n &Neuron) parameters() []&Value {
