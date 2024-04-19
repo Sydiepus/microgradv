@@ -126,19 +126,18 @@ pub fn (mut a Value) backward() {
 	mut visited := []&Value{}
 	build_topo(a, mut children, mut visited)
 	a.grad = 1
-	for child in children {
-		child.val_backward()
+	for i := children.len - 1; i >= 0; i-- {
+		children[i].val_backward()
 	}
 }
 
 fn build_topo(a &Value, mut children []&Value, mut visited []&Value) {
 	if a !in visited {
-		visited.insert(0, a)
+		visited << a
 		for parent in a.parents {
 			build_topo(parent, mut children, mut visited)
 		}
-		// by inserting at the first position, at the end we will have the parents of the value which backward was called on at the beginning
-		children.insert(0, a)
+		children << a
 	}
 }
 

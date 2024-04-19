@@ -79,14 +79,10 @@ pub:
 // Initialize the MLP.
 // Each layer will take the output of the previous one and pass it's output the next.
 pub fn new_mlp(nb_input int, nb_outputs []int) &MLP {
-	mut dm := nb_outputs.clone()
-	dm.insert(0, nb_input)
-	mut lyrs := []&Layer{}
-	for i in 0 .. nb_outputs.len {
-		lyrs << new_layer(dm[i], dm[i + 1])
-	}
+	mut dm := []int{len:1, cap:nb_outputs.len + 1, init:nb_input}
+	dm << nb_outputs
 	return &MLP{
-		layers: lyrs
+		layers: []&Layer{len:nb_outputs.len,cap: nb_outputs.len,init:new_layer(dm[index], dm[index + 1])}
 		dimensions: dm
 	}
 }
