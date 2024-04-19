@@ -113,8 +113,8 @@ pub fn (a &Value) tanh() &Value {
 		parents: [a]
 		op: 'tanh'
 	}
-	out.val_backward = fn [mut out, a] () {
-		out.parents[0].grad += (1 - math.pow(math.tanh(a.data), 2)) * out.grad
+	out.val_backward = fn [mut out] () {
+		out.parents[0].grad += (1 - out.data * out.data) * out.grad
 	}
 	return out
 }
