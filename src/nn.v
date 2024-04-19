@@ -34,8 +34,8 @@ pub fn (n &Neuron) forward(x []&Value) !&Value {
 }
 
 pub fn (n &Neuron) parameters() []&Value {
-	mut out := n.weights.clone()
-	out << n.bias
+	mut out := []&Value{len: 1, cap: n.weights.len + 1, init: n.bias}
+	out << n.weights
 	return out
 }
 
@@ -43,12 +43,14 @@ pub fn (n &Neuron) parameters() []&Value {
 struct Layer {
 pub:
 	// A layer contains n nb of neurons.
-	neurons []&Neuron
+	neurons    []&Neuron
+	dimensions []int
 }
 
 pub fn new_layer(nb_input int, nb_output int) &Layer {
 	return &Layer{
 		neurons: []&Neuron{len: nb_output, cap: nb_output, init: new_neuron(nb_input)}
+		dimensions: [nb_input, nb_output]
 	}
 }
 
@@ -62,7 +64,7 @@ pub fn (l &Layer) forward(x []&Value) ![]&Value {
 }
 
 pub fn (l &Layer) parameters() []&Value {
-	mut out := []&Value{}
+	mut out := []&Value{cap: l.dimensions[0] * l.dimensions[1]}
 	for n in l.neurons {
 		out << n.parameters()
 	}
@@ -79,28 +81,31 @@ pub:
 // Initialize the MLP.
 // Each layer will take the output of the previous one and pass it's output the next.
 pub fn new_mlp(nb_input int, nb_outputs []int) &MLP {
-	mut dm := []int{len:1, cap:nb_outputs.len + 1, init:nb_input}
+	mut dm := []int{len: 1, cap: nb_outputs.len + 1, init: nb_input}
 	dm << nb_outputs
 	return &MLP{
-		layers: []&Layer{len:nb_outputs.len,cap: nb_outputs.len,init:new_layer(dm[index], dm[index + 1])}
+		layers: []&Layer{len: nb_outputs.len, cap: nb_outputs.len, init: new_layer(dm[index],
+			dm[index + 1])}
 		dimensions: dm
 	}
 }
 
 // Iterate over the layers and do forward pass of each with the given input.
 pub fn (m &MLP) forward(x []&Value) ![]&Value {
-	if m.dimensions[0] != x.len {
-		return error('the input should have the same dimensions as the neuron')
-	}
-	mut out := x.clone()
-	for l in m.layers {
-		out = l.forward(out)!
+	mut out := m.layers[0].forward(x)!
+	for i := 1; i < m.layers.len; i++ {
+		out = m.layers[i].forward(out)!
 	}
 	return out
 }
 
 pub fn (m &MLP) parameters() []&Value {
-	mut out := []&Value{}
+	// Calculate the number of parameters to prevent relocation.
+	mut nb_p := 0
+	for i := 0; i < m.dimensions.len - 1; i++ {
+		nb_p += (m.dimensions[i] + 1) * m.dimensions[i + 1]
+	}
+	mut out := []&Value{cap: nb_p}
 	for l in m.layers {
 		out << l.parameters()
 	}
