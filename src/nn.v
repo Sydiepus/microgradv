@@ -56,15 +56,11 @@ pub fn new_layer(nb_input int, nb_output int) &Layer {
 
 // Iterate over the neurons and to forward pass of each with the given input
 pub fn (l &Layer) forward(x []&Value) ![]&Value {
-	mut out := []&Value{}
-	for n in l.neurons {
-		out << n.forward(x)!
-	}
-	return out
+	return []&Value{len: l.dimensions[1],cap:l.dimensions[1], init: l.neurons[index].forward(x)!}
 }
 
 pub fn (l &Layer) parameters() []&Value {
-	mut out := []&Value{cap: l.dimensions[0] * l.dimensions[1]}
+	mut out := []&Value{cap: (l.dimensions[0] + 1) * l.dimensions[1]}
 	for n in l.neurons {
 		out << n.parameters()
 	}
