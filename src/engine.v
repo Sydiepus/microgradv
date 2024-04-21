@@ -4,12 +4,6 @@ import math
 
 // Value is a wrapper for f64 type.
 pub struct Value {
-mut:
-	// The function for backpropagation.
-	// It is assigned when the Value was the result of an operation.
-	val_backward fn () = fn () {
-		return
-	}
 pub:
 	// for debugging, the operation that resulted to this Value.
 	op string // default empty
@@ -27,10 +21,6 @@ pub fn (a &Value) add(b &Value) &Value {
 		parents: [a, b]
 		op: '+'
 	}
-	out.val_backward = fn [mut out] () {
-		out.parents[0].grad += out.grad
-		out.parents[1].grad += out.grad
-	}
 	return out
 }
 
@@ -40,22 +30,14 @@ pub fn (a &Value) mul(b &Value) &Value {
 		parents: [a, b]
 		op: '*'
 	}
-	out.val_backward = fn [mut out] () {
-		out.parents[0].grad += out.parents[1].data * out.grad
-		out.parents[1].grad += out.parents[0].data * out.grad
-	}
-
 	return out
 }
 
 pub fn (a &Value) pow(b f64) &Value {
 	mut out := &Value{
 		data: math.pow(a.data, b)
-		parents: [a]
+		parents: [a, value(b)]
 		op: '**'
-	}
-	out.val_backward = fn [mut out, b] () {
-		out.parents[0].grad += (b * math.pow(out.parents[0].data, b - f64(1))) * out.grad
 	}
 	return out
 }
@@ -66,10 +48,6 @@ pub fn (a &Value) sub(b &Value) &Value {
 		parents: [a, b]
 		op: '-'
 	}
-	out.val_backward = fn [mut out] () {
-		out.parents[0].grad += out.grad
-		out.parents[1].grad -= out.grad
-	}
 	return out
 }
 
@@ -78,11 +56,6 @@ pub fn (a &Value) div(b &Value) &Value {
 		data: a.data / b.data
 		parents: [a, b]
 		op: '/'
-	}
-	out.val_backward = fn [mut out] () {
-		out.parents[0].grad += math.pow(out.parents[1].data, -1) * out.grad
-		out.parents[1].grad += f64(-1) * out.parents[0].data * math.pow(out.parents[1].data,
-			-2) * out.grad
 	}
 	return out
 }
@@ -97,13 +70,6 @@ pub fn (a &Value) relu() &Value {
 		parents: [a]
 		op: 'ReLu'
 	}
-	out.val_backward = fn [mut out] () {
-		if out.data > 0 {
-			out.parents[0].grad += out.grad * 1
-		} else {
-			out.parents[0].grad += 0
-		}
-	}
 	return out
 }
 
@@ -113,10 +79,42 @@ pub fn (a &Value) tanh() &Value {
 		parents: [a]
 		op: 'tanh'
 	}
-	out.val_backward = fn [mut out] () {
-		out.parents[0].grad += (1 - out.data * out.data) * out.grad
-	}
 	return out
+}
+
+fn val_backward(mut child Value) {
+	match child.op {
+		'+' {
+			child.parents[0].grad += child.grad
+			child.parents[1].grad += child.grad
+		}
+		'-' {
+			child.parents[0].grad += child.grad
+			child.parents[1].grad -= child.grad
+		}
+		'*' {
+			child.parents[0].grad += child.parents[1].data * child.grad
+			child.parents[1].grad += child.parents[0].data * child.grad
+		}
+		'**' {
+			child.parents[0].grad += (child.parents[1].data * math.pow(child.parents[0].data,
+				child.parents[1].data - f64(1))) * child.grad
+		}
+		'/' {
+			child.parents[0].grad += math.pow(child.parents[1].data, -1) * child.grad
+			child.parents[1].grad += f64(-1) * child.parents[0].data * math.pow(child.parents[1].data,
+				-2) * child.grad
+		}
+		'ReLu' {
+			child.parents[0].grad += if child.data > 0 { child.grad } else { 0 }
+		}
+		'tanh' {
+			child.parents[0].grad += (1 - child.data * child.data) * child.grad
+		}
+		else {
+			// do nothing
+		}
+	}
 }
 
 pub fn (mut a Value) backward() {
@@ -127,7 +125,7 @@ pub fn (mut a Value) backward() {
 	build_topo(a, mut children, mut visited)
 	a.grad = 1
 	for i := children.len - 1; i >= 0; i-- {
-		children[i].val_backward()
+		val_backward(mut children[i])
 	}
 }
 
